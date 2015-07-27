@@ -15,13 +15,13 @@ public class TapProcessing {
     int bufferStartTime = 0;
     long lastTime = 0;
     LinkedList<Double> values = new LinkedList<Double>();
-    LinkedList<Pair<Boolean, Integer>> peaks = new LinkedList<Pair<Boolean, Integer>>(); // Again, stores the time intervals
+    ArrayList<Pair<Boolean, Integer>> peaks = new ArrayList<Pair<Boolean, Integer>>(); // Again, stores the time intervals
     ArrayList<Integer> taps = new ArrayList<Integer>(); // Again, stores the time intervals
 
     // Peakdetection variables
     double mn = 1000, mx = -1000;
     int mnpos = 0, mxpos = 0;
-    boolean lookformax = true;
+    boolean lookformax = false;
 
 
     // Parameters
@@ -42,38 +42,36 @@ public class TapProcessing {
      * @param value
      */
     public void addData (long time, double value) {
-        // XXX: Make sure this works even when we re-run this after adding a
-        // each row to the array. Basically, does the peak detection algorithm
-        // work well for the corner cases? Would it treat the last point as a
-        // min even though it might not be?
 
-        // How can we be sure teh interpolation works? Probably just running everything...
 
         value = Math.abs(value);
+        long steps = 0;
         if (lastTime == time) values.set(values.size()-1, value);
         else if (values.size() == 0) values.add(value);
         else {
             double lastValue = values.getLast();
             double jump = value - lastValue;
-            long steps = time - lastTime;
+            steps = time - lastTime;
             for (int i = 0; i < steps; i++)
-                values.add(lastValue + jump * ((double)(i+1)/steps));
+                values.add(lastValue + jump*((double)(i+1)/steps));
         }
         lastTime = time;
 
 
-        int peakSearchFrom = Math.min(mnpos, mxpos);
-        for (int i = peakSearchFrom; i < MAX; i++) {
+        // XXX: This is where the bug is...
+        int peakSearchFrom = Math.min(mnpos, mxpos) - bufferStartTime;
+        //Log.v(TAG, "(V:" + value + " |vals|:" + values.size() + " upPeakSearch:" + lookformax + " mxpos:" + mxpos + " mnpos:" + mnpos + " bufferStart:" + bufferStartTime + " peakSearchFrom " + peakSearchFrom + " addedSteps:" + steps + ")");
+        for (int i = peakSearchFrom; i < MAX+100; i++) {
             if (values.size() <= i) break;
             double v = values.get(i);
             int loc = i+bufferStartTime;
-            if (v > mx) { mx = v; mxpos = i+bufferStartTime; }
-            if (v < mn) { mn = v; mnpos = i+bufferStartTime; }
+            if (v > mx) { mx = v; mxpos = loc; }
+            if (v < mn) { mn = v; mnpos = loc; }
 
             if (lookformax) {
                 if (v < mx-delta) {
                     if (!peaks.isEmpty()) peaks.add(Pair.create(true, loc));
-                    //Log.v(TAG, "Added up peak");
+                    //Log.v(TAG, "Added up peak - " + loc);
                     mn = v; mnpos = loc;
                     lookformax = false;
                 }
@@ -83,36 +81,46 @@ public class TapProcessing {
                     mx = v; mxpos = loc;
                     lookformax = true;
 
-                    //Log.v(TAG, "Added down peak");
+                    //Log.v(TAG, "Added down peak - " + loc);
                     // Pop out last few peaks to create basin
                     if (peaks.size() >= 3) {
-
-                        Pair<Boolean, Integer> end = peaks.pop();
-                        Pair<Boolean, Integer> middle = peaks.pop();
-                        Pair<Boolean, Integer> start = peaks.pop();
+                        Pair<Boolean, Integer> start= peaks.remove(peaks.size() - 3);
+                        Pair<Boolean, Integer> middle = peaks.remove(peaks.size() - 2);
+                        Pair<Boolean, Integer> end = peaks.get(peaks.size() - 1); // Not removing this one
 
                         int startIdx = start.second;
                         int endIdx = end.second;
-                        Log.v(TAG, "Found basin - " + (endIdx - startIdx));
+                        //Log.v(TAG, "Found basin - " + (endIdx - startIdx));
                         if (endIdx - startIdx < basinSize) {
                             ArrayList<Double> subset = new ArrayList<Double>();
+
+                            // XXX: Bug in this line
                             for (int jj = startIdx; jj < endIdx; jj++) subset.add(values.get(jj - bufferStartTime));
                             double sum = 0; for (Double d : subset) sum += d;
                             double average = sum / subset.size();
-                            double var = 0; for (Double d : subset) var += Math.pow(d - average, 2); v /= subset.size();
-                            if (var > basinVari) taps.add(middle.second);
+                            double var = 0; for (Double d : subset) var += Math.pow(d - average, 2); var /= subset.size();
+
+                            //Log.e(TAG, "Small enough. Variance is " + var);
+                            if (var > basinVari) {
+                                taps.add(middle.second);
+
+                            }
                         }
                     }
                 }
             }
         }
 
+        // Cleaning values
         while (values.size() > MAX) {
             bufferStartTime++;
-            if (--mxpos < 0) mxpos = 0;
-            if (--mnpos < 0) mnpos = 0;
+            //if (--mxpos < 0) mxpos = 0;
+            //if (--mnpos < 0) mnpos = 0;
+            if (mxpos < bufferStartTime) mxpos = bufferStartTime;
+            if (mnpos < bufferStartTime) mnpos = bufferStartTime;
             values.pop();
         }
+
     };
 
 
@@ -132,7 +140,7 @@ public class TapProcessing {
             }
         }
 
-        while (taps.get(0) < lastTime - 1000) taps.remove(0);
+        while (!taps.isEmpty() && (taps.get(0) < lastTime - 1000)) taps.remove(0);
         return false;
     }
 

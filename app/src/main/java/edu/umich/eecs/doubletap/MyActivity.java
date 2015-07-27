@@ -70,9 +70,17 @@ public class MyActivity extends Activity {
             public void run () {
                 for (int i = 0; i < 10; i++) {
                     try { Thread.currentThread().sleep(100); } catch (Exception e) {}
-                    pane.setAlpha(1);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run () { pane.setAlpha(1); }
+                    });
                     try { Thread.currentThread().sleep(100); } catch (Exception e) {}
-                    pane.setAlpha(0);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pane.setAlpha(0);
+                        }
+                    });
                 }
             }
         })).start();
