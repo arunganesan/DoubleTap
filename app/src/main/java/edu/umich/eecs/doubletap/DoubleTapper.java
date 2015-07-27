@@ -109,6 +109,10 @@ public class DoubleTapper {
             // point for those is simply from the last peak -- max or min
             // The stitch point for basins is from the last ending basin (min peak)
 
+            // TODO: Create three TapProcessors for each axis. Feed them data and see
+            // which ones trigger tap events. We can just output that as three separate
+            // panes which light up for now. Then we can use some mechanism (maybe majority
+            // vote) to decide when to throw an actual triggered event.
 
             cb[++bufferIndex % cb.length] = z;
             if (Math.abs(z - cb[(bufferIndex-1) % cb.length]) > THRESH) {
