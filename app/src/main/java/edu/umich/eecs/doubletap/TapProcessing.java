@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import android.util.Log;
 
 /**
  * Created by Arun on 7/26/2015.
@@ -19,7 +20,7 @@ public class TapProcessing {
 
     // Peakdetection variables
     double mn = 1000, mx = -1000;
-    int mnpos = -1, mxpos = -1;
+    int mnpos = 0, mxpos = 0;
     boolean lookformax = true;
 
 
@@ -27,6 +28,10 @@ public class TapProcessing {
     private double delta = 0.35;
     private double basinSize = 100;
     private double basinVari = 0.7;
+
+    // Debug
+    final static String TAG = "TapProcessing";
+
 
     /**
      * Adds new data, continues from last point where it left off to calculate
@@ -46,6 +51,7 @@ public class TapProcessing {
 
         value = Math.abs(value);
         if (lastTime == time) values.set(values.size()-1, value);
+        else if (values.size() == 0) values.add(value);
         else {
             double lastValue = values.getLast();
             double jump = value - lastValue;
@@ -58,6 +64,7 @@ public class TapProcessing {
 
         int peakSearchFrom = Math.min(mnpos, mxpos);
         for (int i = peakSearchFrom; i < MAX; i++) {
+            if (values.size() <= i) break;
             double v = values.get(i);
             int loc = i+bufferStartTime;
             if (v > mx) { mx = v; mxpos = i+bufferStartTime; }
@@ -66,6 +73,7 @@ public class TapProcessing {
             if (lookformax) {
                 if (v < mx-delta) {
                     if (!peaks.isEmpty()) peaks.add(Pair.create(true, loc));
+                    //Log.v(TAG, "Added up peak");
                     mn = v; mnpos = loc;
                     lookformax = false;
                 }
@@ -75,14 +83,17 @@ public class TapProcessing {
                     mx = v; mxpos = loc;
                     lookformax = true;
 
+                    //Log.v(TAG, "Added down peak");
                     // Pop out last few peaks to create basin
                     if (peaks.size() >= 3) {
+
                         Pair<Boolean, Integer> end = peaks.pop();
                         Pair<Boolean, Integer> middle = peaks.pop();
                         Pair<Boolean, Integer> start = peaks.pop();
 
                         int startIdx = start.second;
                         int endIdx = end.second;
+                        Log.v(TAG, "Found basin - " + (endIdx - startIdx));
                         if (endIdx - startIdx < basinSize) {
                             ArrayList<Double> subset = new ArrayList<Double>();
                             for (int jj = startIdx; jj < endIdx; jj++) subset.add(values.get(jj - bufferStartTime));

@@ -9,9 +9,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.util.Log;
 
 
 public class MyActivity extends Activity {
+    final static String TAG = "MyActivity";
     private DoubleTapper doubleTapper;
     private TextView textView;
     private FrameLayout frame;
@@ -23,15 +25,15 @@ public class MyActivity extends Activity {
         setContentView(R.layout.activity_my);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        Log.v(TAG, "Prewire");
         wireUI();
 
+        Log.v(TAG, "DTapper");
         doubleTapper = new DoubleTapper(this);
         doubleTapper.startMonitor();
     }
 
     private void wireUI () {
-        textView = (TextView) findViewById(R.id.textView);
-        frame = (FrameLayout) findViewById(R.id.parentView);
         ((Button) findViewById(R.id.recordButton)).setOnClickListener(recordListener);
 
         xPane = (FrameLayout) findViewById(R.id.xPane);
@@ -58,39 +60,24 @@ public class MyActivity extends Activity {
     }
 
     public void flashColor (String color) {
-        FrameLayout pane;
+        final FrameLayout pane;
         if (color.equals("x")) pane = xPane;
         else if (color.equals("y")) pane = yPane;
-        else if (color.equals("z")) pane = zPane;
+        else pane = zPane;
 
         (new Thread(new Runnable() {
             @Override
             public void run () {
                 for (int i = 0; i < 10; i++) {
                     try { Thread.currentThread().sleep(100); } catch (Exception e) {}
-                    panel.setAlpha(1);
+                    pane.setAlpha(1);
                     try { Thread.currentThread().sleep(100); } catch (Exception e) {}
-                    panel.setAlpha(0);
+                    pane.setAlpha(0);
                 }
             }
         })).start();
     }
 
-    public void flagStart () {
-        runOnUiThread(new Runnable() {
-            public void run () {
-                frame.setBackgroundColor(0xFFFF0000);
-            }
-        });
-    }
-
-    public void flagEnd () {
-        runOnUiThread(new Runnable() {
-            public void run () {
-                frame.setBackgroundColor(0xFFFFFFFF);
-            }
-        });
-    }
 
     @Override
     public void onDestroy () {

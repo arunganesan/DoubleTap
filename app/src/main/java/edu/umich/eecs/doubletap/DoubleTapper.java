@@ -35,6 +35,11 @@ public class DoubleTapper {
 
     public DoubleTapper (MyActivity activity) {
         this.activity = activity;
+
+        xP = new TapProcessing();
+        yP = new TapProcessing();
+        zP = new TapProcessing();
+
         sm = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     }
