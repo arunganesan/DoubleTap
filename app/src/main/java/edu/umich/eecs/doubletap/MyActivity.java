@@ -15,6 +15,7 @@ public class MyActivity extends Activity {
     private DoubleTapper doubleTapper;
     private TextView textView;
     private FrameLayout frame;
+    private FrameLayout xPane, yPane, zPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +33,10 @@ public class MyActivity extends Activity {
         textView = (TextView) findViewById(R.id.textView);
         frame = (FrameLayout) findViewById(R.id.parentView);
         ((Button) findViewById(R.id.recordButton)).setOnClickListener(recordListener);
+
+        xPane = (FrameLayout) findViewById(R.id.xPane);
+        yPane = (FrameLayout) findViewById(R.id.yPane);
+        zPane = (FrameLayout) findViewById(R.id.zPane);
     }
 
     public int f (float i) { return (int)i*100; }
@@ -46,10 +51,29 @@ public class MyActivity extends Activity {
 
     public void updateText (final String msg) {
         runOnUiThread(new Runnable() {
-            public void run () {
+            public void run() {
                 textView.setText(msg);
             }
         });
+    }
+
+    public void flashColor (String color) {
+        FrameLayout pane;
+        if (color.equals("x")) pane = xPane;
+        else if (color.equals("y")) pane = yPane;
+        else if (color.equals("z")) pane = zPane;
+
+        (new Thread(new Runnable() {
+            @Override
+            public void run () {
+                for (int i = 0; i < 10; i++) {
+                    try { Thread.currentThread().sleep(100); } catch (Exception e) {}
+                    panel.setAlpha(1);
+                    try { Thread.currentThread().sleep(100); } catch (Exception e) {}
+                    panel.setAlpha(0);
+                }
+            }
+        })).start();
     }
 
     public void flagStart () {
