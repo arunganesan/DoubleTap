@@ -25,7 +25,7 @@ public class MyActivity extends Activity {
         wireUI();
 
         doubleTapper = new DoubleTapper(this);
-        //doubleTapper.startMonitor();
+        doubleTapper.startMonitor();
     }
 
     private void wireUI () {

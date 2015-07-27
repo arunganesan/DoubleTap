@@ -29,21 +29,17 @@ public class DoubleTapper {
     private int trigger_delay = 5000;
     private float THRESH = 2;
 
-    private int min_peak_delay = 150;
-    private int max_peak_delay = 600;
     private long last_peak = 0;
 
     private String TAG = "DTapper";
     int bufferIndex = 0;
     private float [] cb = new float [100];
-    private float [] smoothed = new float [100];
     public ArrayList<ArrayList<Double>> debugData = new ArrayList<ArrayList<Double>>();
 
     public DoubleTapper (MyActivity activity) {
         this.activity = activity;
         sm = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sm.registerListener(accelListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public void triggerEvent () {
@@ -51,6 +47,10 @@ public class DoubleTapper {
             last_triggered = System.currentTimeMillis();
             (new Thread(eventTrigger)).start();
         }
+    }
+
+    public void startMonitor () {
+        sm.registerListener(accelListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     Runnable eventTrigger = new Runnable() {
@@ -64,10 +64,6 @@ public class DoubleTapper {
             }
         }
     };
-
-    /**
-     * Spawn a new thread for accelerometer processing.
-     */
 
     private String getFilename() {
         String filepath = Environment.getExternalStorageDirectory().getPath();
@@ -101,6 +97,19 @@ public class DoubleTapper {
         public void onAccuracyChanged (Sensor sensor, int accuracy) {}
         public void onSensorChanged (SensorEvent event) {
             float x = event.values[0], y = event.values[1], z = Math.abs(event.values[2]);
+            // 1. Add to respective buffer, interpolate as needed
+            // 2. Detect peaks and valleys using port of Matlab code
+            // 3. Find basins (can be merged into previous code)
+            // 4. Filter basins by variance and size
+            // 5. Remove very nearby adjacent peaks
+            // 6. Run through double-peak detection
+
+            // Steps 2 - 4 can be done continuously and don't have to be
+            // repeated everytime we add a new set of points. The stitch
+            // point for those is simply from the last peak -- max or min
+            // The stitch point for basins is from the last ending basin (min peak)
+
+
             cb[++bufferIndex % cb.length] = z;
             if (Math.abs(z - cb[(bufferIndex-1) % cb.length]) > THRESH) {
                 long curr_time = System.currentTimeMillis();
