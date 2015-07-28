@@ -59,13 +59,13 @@ public class DoubleTapper {
         public void onSensorChanged (SensorEvent event) {
             long time = System.currentTimeMillis();
             float x = event.values[0], y = event.values[1], z = Math.abs(event.values[2]);
-            //xP.addData(time, x);
+            xP.addData(time, x);
             yP.addData(time, y);
-            //zP.addData(time, z);
+            zP.addData(time, z);
 
-            //if (xP.detectDoubleTap()) activity.flashColor("x");
+            if (xP.detectDoubleTap()) activity.flashColor("x");
             if (yP.detectDoubleTap()) activity.flashColor("y");
-            //if (zP.detectDoubleTap()) activity.flashColor("z");
+            if (zP.detectDoubleTap()) activity.flashColor("z");
 
             if (debugging) {
                 if (debugData.size() > 1000) {

@@ -11,7 +11,7 @@ import android.util.Log;
  */
 public class TapProcessing {
     // Buffers + pointers
-    final static int MAX = 1500;
+    final static int MAX = 3500;
     int bufferStartTime = 0;
     long lastTime = 0;
     LinkedList<Double> values = new LinkedList<Double>();
@@ -28,6 +28,7 @@ public class TapProcessing {
     private double delta = 0.35;
     private double basinSize = 100;
     private double basinVari = 0.7;
+    private int adjacentCheck = 25;
 
     // Debug
     final static String TAG = "TapProcessing";
@@ -90,20 +91,34 @@ public class TapProcessing {
 
                         int startIdx = start.second;
                         int endIdx = end.second;
+
+                        // We've timed out
+                        if (startIdx < bufferStartTime) continue;
+
                         //Log.v(TAG, "Found basin - " + (endIdx - startIdx));
                         if (endIdx - startIdx < basinSize) {
                             ArrayList<Double> subset = new ArrayList<Double>();
 
                             // XXX: Bug in this line
-                            for (int jj = startIdx; jj < endIdx; jj++) subset.add(values.get(jj - bufferStartTime));
+                            for (int jj = startIdx; jj < endIdx; jj++) {
+                                //Log.v(TAG, "JJ=" + jj + " BuferStartTime=" + bufferStartTime + " startIdx=" + startIdx + " jj-bst=" + (jj - bufferStartTime) + " |val|=" + values.size());
+                                subset.add(values.get(jj - bufferStartTime));
+                            }
+
                             double sum = 0; for (Double d : subset) sum += d;
                             double average = sum / subset.size();
                             double var = 0; for (Double d : subset) var += Math.pow(d - average, 2); var /= subset.size();
 
                             //Log.e(TAG, "Small enough. Variance is " + var);
                             if (var > basinVari) {
-                                taps.add(middle.second);
-
+                                if (taps.isEmpty()) {
+                                    Log.v(TAG, "Tap found: " + middle.second);
+                                    taps.add(middle.second);
+                                }
+                                else if (middle.second - taps.get(taps.size()-1) > adjacentCheck) {
+                                    Log.v(TAG, "Tap found: " + middle.second);
+                                    taps.add(middle.second);
+                                }
                             }
                         }
                     }
@@ -137,10 +152,12 @@ public class TapProcessing {
             if (diff > 250 && diff < 550) {
                 taps.remove(i-1);taps.remove(i-1);
                 return true;
+            } else {
+                Log.e(TAG, "Found two taps difference is " + diff);
             }
         }
 
-        while (!taps.isEmpty() && (taps.get(0) < lastTime - 1000)) taps.remove(0);
+        while (!taps.isEmpty() && (taps.get(0) < lastTime - 1500)) taps.remove(0);
         return false;
     }
 
