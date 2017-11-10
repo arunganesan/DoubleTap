@@ -1,50 +1,63 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.wearable.view.BoxInsetLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:id="@+id/parentView"
-    tools:context=".MyActivity">
-
+    tools:context=".MyActivity"
+    tools:deviceIds="wear">
 
     <Button
+        android:id="@+id/recordButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Record"
-        android:id="@+id/recordButton"
-        android:layout_gravity="center_horizontal|top" />
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="10dp"
+        android:text="Record" />
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal">
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="100dp"
+        android:orientation="horizontal">
 
 
         <FrameLayout
+            android:id="@+id/xPane"
             android:layout_width="@dimen/pane_width"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:background="#ff00ff"
             android:alpha="0"
-            android:id="@+id/xPane"></FrameLayout>
+            android:background="#ff00ff"></FrameLayout>
 
         <FrameLayout
+            android:id="@+id/yPane"
             android:layout_width="@dimen/pane_width"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:background="#ff0000"
             android:alpha="0"
-            android:id="@+id/yPane"></FrameLayout>
+            android:background="#ff0000"></FrameLayout>
 
         <FrameLayout
+            android:id="@+id/zPane"
             android:layout_width="@dimen/pane_width"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:background="#0000ff"
             android:alpha="0"
-            android:id="@+id/zPane"></FrameLayout>
+            android:background="#0000ff"></FrameLayout>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="108dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="70dp"
+        android:text="TextView"
+        android:textAlignment="center"
+        tools:text="Debug..." />
 
-</LinearLayout>
+</android.support.wearable.view.BoxInsetLayout>
+

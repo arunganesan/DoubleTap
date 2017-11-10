@@ -1,18 +1,18 @@
 package edu.umich.eecs.doubletap;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.support.wearable.activity.WearableActivity;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.util.Log;
 
 
-public class MyActivity extends Activity {
+public class MyActivity extends WearableActivity {
     final static String TAG = "MyActivity";
     private DoubleTapper doubleTapper;
     private TextView textView;
@@ -35,6 +35,7 @@ public class MyActivity extends Activity {
 
     private void wireUI () {
         ((Button) findViewById(R.id.recordButton)).setOnClickListener(recordListener);
+        textView = (TextView) findViewById(R.id.textView);
 
         xPane = (FrameLayout) findViewById(R.id.xPane);
         yPane = (FrameLayout) findViewById(R.id.yPane);
@@ -65,7 +66,10 @@ public class MyActivity extends Activity {
         else if (color.equals("y")) pane = yPane;
         else pane = zPane;
 
-        (new Thread(new Runnable() {
+        Log.e(TAG, "Flashing color " + color);
+
+
+        /*(new Thread(new Runnable() {
             @Override
             public void run () {
                 for (int i = 0; i < 10; i++) {
@@ -83,7 +87,7 @@ public class MyActivity extends Activity {
                     });
                 }
             }
-        })).start();
+        })).start();*/
     }
 
 
@@ -116,9 +120,12 @@ public class MyActivity extends Activity {
     View.OnClickListener recordListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            Log.v(TAG, "Starting");
+            updateText("Starting experiment");
             doubleTapper.debugging = true;
             doubleTapper.saved = false;
-            doubleTapper.debugData.clear();
+            doubleTapper.debugCounter = 0;
+            doubleTapper.startDebugTime = System.currentTimeMillis();
             updateText("Running experiment");
         }
     };

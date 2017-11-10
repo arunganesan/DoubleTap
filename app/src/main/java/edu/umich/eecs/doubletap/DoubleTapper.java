@@ -9,11 +9,10 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+
 
 /**
  * Created by Arun on 2/11/2015.
@@ -27,8 +26,15 @@ public class DoubleTapper {
     // Debug variables
     private String TAG = "DTapper";
     public boolean debugging = false;
-    private static String FOLDER = "soundfield";
-    public ArrayList<ArrayList<Double>> debugData = new ArrayList<ArrayList<Double>>();
+    private static String FOLDER = "twatch";
+
+    //public ArrayList<ArrayList<Double>> debugData = new ArrayList<ArrayList<Double>>();
+
+    final int DEBUG_UPTO = 1000;
+    float [][] debugData = new float [DEBUG_UPTO][4];
+    public int debugCounter = 0;
+    public long startDebugTime;
+
 
     // Tap processors
     TapProcessing xP, yP, zP;
@@ -36,9 +42,9 @@ public class DoubleTapper {
     public DoubleTapper (MyActivity activity) {
         this.activity = activity;
 
-        xP = new TapProcessing();
-        yP = new TapProcessing();
-        zP = new TapProcessing();
+        //xP = new TapProcessing();
+        //yP = new TapProcessing();
+        //zP = new TapProcessing();
 
         sm = (SensorManager) activity.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -51,35 +57,37 @@ public class DoubleTapper {
     }
 
     public void startMonitor () {
-        sm.registerListener(accelListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        Log.v(TAG, "Starting monitor!");
+        sm.registerListener(accelListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private SensorEventListener accelListener = new SensorEventListener() {
         public void onAccuracyChanged (Sensor sensor, int accuracy) {}
         public void onSensorChanged (SensorEvent event) {
             long time = System.currentTimeMillis();
-            float x = event.values[0], y = event.values[1], z = Math.abs(event.values[2]);
-            xP.addData(time, x);
-            yP.addData(time, y);
-            zP.addData(time, z);
+            float x = event.values[0], y = event.values[1], z = event.values[2];
+            //xP.addData(time, x);
+            //yP.addData(time, y);
+            //zP.addData(time, z);
 
-            if (xP.detectDoubleTap()) activity.flashColor("x");
-            if (yP.detectDoubleTap()) activity.flashColor("y");
-            if (zP.detectDoubleTap()) activity.flashColor("z");
+            //if (xP.detectDoubleTap()) activity.flashColor("x");
+            //if (yP.detectDoubleTap()) activity.flashColor("y");
+            //if (zP.detectDoubleTap()) activity.flashColor("z");
 
             if (debugging) {
-                if (debugData.size() > 1000) {
+                if (debugCounter >= DEBUG_UPTO) {
                     //shutdown();
                     //activity.updateText("Done experiment");
                     saveDebug();
-                    triggerEvent();
+                    //triggerEvent();
+                    debugging = false;
+                    debugCounter = 0;
                 } else {
-                    ArrayList<Double> row = new ArrayList<Double>();
-                    row.add((double) System.currentTimeMillis());
-                    row.add((double) x);
-                    row.add((double) y);
-                    row.add((double) z);
-                    debugData.add(row);
+                    debugData[debugCounter][0] = (float)(System.currentTimeMillis() - startDebugTime);
+                    debugData[debugCounter][1] = x;
+                    debugData[debugCounter][2] = y;
+                    debugData[debugCounter][3] = z;
+                    debugCounter ++;
                 }
             }
         }
@@ -107,8 +115,8 @@ public class DoubleTapper {
         try {
             out = new FileOutputStream(outFilename);
             out.write("t\tx\ty\tz\n".getBytes());
-            for (ArrayList<Double> row : debugData) {
-                String line = "" + row.get(0) + "\t" + row.get(1) + "\t" + row.get(2) + "\t" + row.get(3) + "\n";
+            for (int i = 0; i < DEBUG_UPTO; i++) {
+                String line = String.format("%f\t%f\t%f\t%f\n", debugData[i][0], debugData[i][1], debugData[i][2], debugData[i][3]);
                 out.write(line.getBytes());
             }
             out.close();
